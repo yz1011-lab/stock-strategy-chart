@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股價走勢圖 — 衍生性產品策略分析</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+            background: #131722;
+            color: #d1d4dc;
+            min-height: 100vh;
+        }
+
+        /* ===== Password Screen ===== */
+        #password-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1e2e 0%, #131722 100%);
+        }
+        .password-box {
+            background: #1e222d;
+            padding: 48px 40px;
+            border-radius: 16px;
+            border: 1px solid #2a2e39;
+            text-align: center;
+            width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .password-box .icon { font-size: 48px; margin-bottom: 16px; }
+        .password-box h2 { color: #e0e3eb; margin-bottom: 6px; font-size: 22px; font-weight: 700; }
+        .password-box p { color: #787b86; margin-bottom: 28px; font-size: 13px; }
+        .password-box input {
+            width: 100%; padding: 13px 18px; background: #2a2e39; border: 1px solid #363a45;
+            border-radius: 10px; color: #e0e3eb; font-size: 15px; outline: none; margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .password-box input:focus { border-color: #2962ff; }
+        .password-box button {
+            width: 100%; padding: 13px; background: #2962ff; color: white; border: none;
+            border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .password-box button:hover { background: #1e53e5; }
+        .password-error { color: #ef5350; font-size: 13px; margin-top: 10px; display: none; }
+
+        /* ===== Main App ===== */
+        #main-app { display: none; padding: 20px 24px; max-width: 1440px; margin: 0 auto; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .app-header h1 { font-size: 18px; color: #e0e3eb; font-weight: 700; }
+        .app-header .logout-btn {
+            padding: 6px 16px; background: transparent; border: 1px solid #363a45; border-radius: 6px;
+            color: #787b86; font-size: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .app-header .logout-btn:hover { border-color: #ef5350; color: #ef5350; }
+
+        /* ===== Form ===== */
+        .form-container {
+            background: #1e222d; border-radius: 12px; border: 1px solid #2a2e39; padding: 24px; margin-bottom: 20px;
+        }
+        .section-label {
+            font-size: 11px; color: #4c525e; text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2a2e39;
+        }
+        .form-row { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
+        .form-row:last-child { margin-bottom: 0; }
+        .form-group { flex: 1; min-width: 180px; position: relative; }
+        .form-group.ticker-group { min-width: 300px; flex: 2; }
+        .form-group label {
+            display: block; font-size: 12px; color: #787b86; margin-bottom: 6px;
+            font-weight: 500; letter-spacing: 0.3px;
+        }
+        .form-group label .required { color: #ef5350; }
+        .form-group input {
+            width: 100%; padding: 10px 14px; background: #2a2e39; border: 1px solid #363a45;
+            border-radius: 8px; color: #e0e3eb; font-size: 14px; outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus { border-color: #2962ff; }
+        .form-group input::placeholder { color: #4c525e; }
+        .custom-field-row { display: flex; gap: 8px; }
+        .custom-field-row input:first-child { flex: 2; }
+        .custom-field-row input:last-child { flex: 1; }
+
+        /* ===== Autocomplete ===== */
+        .autocomplete-dropdown {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #2a2e39; border: 1px solid #363a45; border-top: none;
+            border-radius: 0 0 8px 8px; max-height: 260px; overflow-y: auto;
+            z-index: 1000; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .autocomplete-item {
+            padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid rgba(54,58,69,0.5); transition: background 0.1s;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover, .autocomplete-item.active { background: #363a45; }
+        .autocomplete-item .symbol { font-weight: 700; color: #2962ff; font-size: 14px; min-width: 60px; }
+        .autocomplete-item .name {
+            color: #787b86; font-size: 12px; margin-left: 12px;
+            text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+        }
+
+        /* ===== Buttons ===== */
+        .btn-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+        .btn-submit {
+            padding: 11px 36px; background: #2962ff; color: white; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;
+        }
+        .btn-submit:hover { background: #1e53e5; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(41,98,255,0.3); }
+        .btn-submit:disabled { background: #363a45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* ===== Chart Container ===== */
+        .chart-container {
+            background: #1e222d; border-radius: 12px; border: 1px solid #2a2e39; overflow: hidden;
+            display: none; position: relative;
+        }
+        .chart-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #2a2e39; flex-wrap: wrap; gap: 12px;
+        }
+        .chart-info { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+        .chart-ticker { font-size: 18px; font-weight: 700; color: #e0e3eb; }
+        .chart-company { font-size: 13px; color: #787b86; }
+        .chart-current-price { font-size: 22px; font-weight: 700; color: #e0e3eb; }
+        .chart-change { font-size: 13px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .chart-change.up { color: #26a69a; background: rgba(38,166,154,0.1); }
+        .chart-change.down { color: #ef5350; background: rgba(239,83,80,0.1); }
+
+        .chart-toolbar { display: flex; align-items: center; gap: 12px; }
+        .time-range-buttons { display: flex; gap: 4px; }
+        .time-btn {
+            padding: 6px 16px; background: transparent; border: 1px solid #363a45; border-radius: 6px;
+            color: #787b86; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 500;
+        }
+        .time-btn:hover { color: #e0e3eb; border-color: #4c525e; }
+        .time-btn.active { background: #2962ff; border-color: #2962ff; color: white; }
+
+        /* ===== Download Button ===== */
+        .download-group { display: flex; gap: 4px; position: relative; }
+        .btn-download {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 14px; background: transparent; border: 1px solid #363a45; border-radius: 6px;
+            color: #787b86; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 500;
+        }
+        .btn-download:hover { color: #e0e3eb; border-color: #4c525e; background: rgba(42,46,57,0.5); }
+        .btn-download:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-download svg { width: 14px; height: 14px; }
+        .download-dropdown {
+            display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 200;
+            background: #2a2e39; border: 1px solid #363a45; border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 180px; overflow: hidden;
+        }
+        .download-dropdown.show { display: block; }
+        .download-option {
+            padding: 10px 16px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+            color: #d1d4dc; font-size: 13px; transition: background 0.1s;
+            border-bottom: 1px solid rgba(54,58,69,0.5);
+        }
+        .download-option:last-child { border-bottom: none; }
+        .download-option:hover { background: #363a45; }
+        .download-option .desc { color: #787b86; font-size: 11px; margin-top: 2px; }
+        .download-option svg { width: 16px; height: 16px; flex-shrink: 0; color: #787b86; }
+
+        #chart-area { width: 100%; height: 560px; }
+
+        /* ===== Legend ===== */
+        .chart-legend {
+            display: flex; flex-wrap: wrap; gap: 16px; padding: 14px 20px; border-top: 1px solid #2a2e39;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #a0a3ab; }
+        .legend-line { width: 28px; height: 0; border-top-width: 3px; border-top-style: solid; }
+        .legend-line.dashed { border-top-style: dashed; }
+        .legend-line.dotted { border-top-style: dotted; }
+
+        /* ===== Loading ===== */
+        .loading-overlay {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(19,23,34,0.85); justify-content: center; align-items: center; z-index: 100;
+            flex-direction: column; gap: 16px;
+        }
+        .loading-spinner {
+            width: 44px; height: 44px; border: 3px solid #363a45; border-top-color: #2962ff;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        .loading-text { color: #787b86; font-size: 13px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg { text-align: center; padding: 60px 20px; color: #ef5350; font-size: 14px; }
+        .spin-icon { animation: spin 1s linear infinite; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .form-group { min-width: 100%; }
+            .form-group.ticker-group { min-width: 100%; }
+            #chart-area { height: 400px; }
+            .chart-header { padding: 12px 16px; }
+            .chart-legend { padding: 10px 16px; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== Password Screen ===== -->
+<div id="password-screen">
+    <div class="password-box">
+        <div class="icon">📈</div>
+        <h2>Stock Strategy Chart</h2>
+        <p>股價走勢圖與衍生性產品策略分析工具</p>
+        <input type="password" id="pwd-input" placeholder="請輸入密碼" autofocus>
+        <button onclick="checkPassword()">進入系統</button>
+        <div class="password-error" id="pwd-error">密碼錯誤，請重新輸入</div>
+    </div>
+</div>
+
+<!-- ===== Main App ===== -->
+<div id="main-app">
+    <div class="app-header">
+        <h1>📈 股價走勢圖 — 衍生性產品策略分析</h1>
+        <button class="logout-btn" onclick="logout()">登出</button>
+    </div>
+
+    <div class="form-container">
+        <div class="section-label">基本設定</div>
+        <div class="form-row">
+            <div class="form-group ticker-group">
+                <label>股票代碼 Ticker <span class="required">*</span></label>
+                <input type="text" id="ticker-input" placeholder="輸入代碼或公司名稱，如 AAPL、Apple、台積電" autocomplete="off">
+                <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
+            </div>
+            <div class="form-group">
+                <label>轉換價 Strike Price (%)</label>
+                <input type="number" id="strike-price" min="0" max="200" step="0.1" placeholder="0 - 200">
+            </div>
+        </div>
+
+        <div class="section-label" style="margin-top:16px">障礙價格 Barrier Prices</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>敲出價 KO Price (%)</label>
+                <input type="number" id="ko-price-1" min="0" max="200" step="0.1" placeholder="0 - 200">
+            </div>
+            <div class="form-group">
+                <label>敲入價 KI Price (%)</label>
+                <input type="number" id="ki-price" min="0" max="200" step="0.1" placeholder="0 - 200">
+            </div>
+            <div class="form-group">
+                <label>敲出價 KO Price 2 (%)</label>
+                <input type="number" id="ko-price-2" min="0" max="200" step="0.1" placeholder="0 - 200">
+            </div>
+        </div>
+
+        <div class="section-label" style="margin-top:16px">自訂欄位 Custom Fields</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>自訂欄位 1</label>
+                <div class="custom-field-row">
+                    <input type="text" id="custom-name-1" placeholder="名稱">
+                    <input type="number" id="custom-pct-1" min="0" max="200" step="0.1" placeholder="%">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>自訂欄位 2</label>
+                <div class="custom-field-row">
+                    <input type="text" id="custom-name-2" placeholder="名稱">
+                    <input type="number" id="custom-pct-2" min="0" max="200" step="0.1" placeholder="%">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>自訂欄位 3</label>
+                <div class="custom-field-row">
+                    <input type="text" id="custom-name-3" placeholder="名稱">
+                    <input type="number" id="custom-pct-3" min="0" max="200" step="0.1" placeholder="%">
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-submit" id="submit-btn" onclick="generateChart()">生成走勢圖</button>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container" id="chart-container">
+        <div class="chart-header">
+            <div class="chart-info">
+                <span class="chart-ticker" id="chart-ticker"></span>
+                <span class="chart-company" id="chart-company"></span>
+                <span class="chart-current-price" id="chart-current-price"></span>
+                <span class="chart-change" id="chart-change"></span>
+            </div>
+            <div class="chart-toolbar">
+                <div class="time-range-buttons">
+                    <button class="time-btn" data-range="1mo" onclick="switchRange('1mo')">1M</button>
+                    <button class="time-btn" data-range="3mo" onclick="switchRange('3mo')">3M</button>
+                    <button class="time-btn active" data-range="1y" onclick="switchRange('1y')">1Y</button>
+                    <button class="time-btn" data-range="5y" onclick="switchRange('5y')">5Y</button>
+                    <button class="time-btn" data-range="max" onclick="switchRange('max')">全部</button>
+                </div>
+                <div class="download-group">
+                    <button class="btn-download" id="download-btn" onclick="toggleDownloadMenu()" title="下載圖表">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        下載
+                    </button>
+                    <div class="download-dropdown" id="download-dropdown">
+                        <div class="download-option" onclick="downloadChart('png-full')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <div>
+                                <div>完整截圖 PNG</div>
+                                <div class="desc">含標題、圖例與策略線標示</div>
+                            </div>
+                        </div>
+                        <div class="download-option" onclick="downloadChart('png-chart')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            <div>
+                                <div>僅圖表 PNG</div>
+                                <div class="desc">僅 K 線走勢圖部分</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="chart-area"></div>
+        <div class="chart-legend" id="chart-legend"></div>
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">載入股價數據中...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ======================== CONFIG ========================
+const PASSWORD = '1234';
+
+// ======================== TICKER DATABASE ========================
+const TICKERS = [
+    // US - Mega Cap Tech
+    {s:"AAPL",n:"Apple Inc."},{s:"MSFT",n:"Microsoft Corporation"},{s:"GOOGL",n:"Alphabet Inc. (Google)"},{s:"GOOG",n:"Alphabet Inc. Class C"},
+    {s:"AMZN",n:"Amazon.com Inc."},{s:"META",n:"Meta Platforms (Facebook)"},{s:"NVDA",n:"NVIDIA Corporation"},{s:"TSLA",n:"Tesla Inc."},
+    {s:"TSM",n:"Taiwan Semiconductor (台積電)"},{s:"AVGO",n:"Broadcom Inc."},{s:"ORCL",n:"Oracle Corporation"},{s:"ADBE",n:"Adobe Inc."},
+    {s:"CRM",n:"Salesforce Inc."},{s:"CSCO",n:"Cisco Systems"},{s:"ACN",n:"Accenture plc"},{s:"INTC",n:"Intel Corporation"},
+    {s:"AMD",n:"Advanced Micro Devices"},{s:"QCOM",n:"Qualcomm Inc."},{s:"TXN",n:"Texas Instruments"},{s:"NFLX",n:"Netflix Inc."},
+    {s:"IBM",n:"IBM Corporation"},{s:"NOW",n:"ServiceNow Inc."},{s:"INTU",n:"Intuit Inc."},{s:"AMAT",n:"Applied Materials"},
+    {s:"MU",n:"Micron Technology"},{s:"LRCX",n:"Lam Research"},{s:"KLAC",n:"KLA Corporation"},{s:"SNPS",n:"Synopsys Inc."},
+    {s:"CDNS",n:"Cadence Design"},{s:"MRVL",n:"Marvell Technology"},{s:"PANW",n:"Palo Alto Networks"},{s:"CRWD",n:"CrowdStrike"},
+    {s:"SNOW",n:"Snowflake Inc."},{s:"DDOG",n:"Datadog Inc."},{s:"ZS",n:"Zscaler Inc."},{s:"NET",n:"Cloudflare Inc."},
+    {s:"SHOP",n:"Shopify Inc."},{s:"SQ",n:"Block Inc. (Square)"},{s:"PYPL",n:"PayPal Holdings"},{s:"COIN",n:"Coinbase Global"},
+    {s:"UBER",n:"Uber Technologies"},{s:"ABNB",n:"Airbnb Inc."},{s:"DASH",n:"DoorDash Inc."},{s:"SPOT",n:"Spotify Technology"},
+    {s:"SNAP",n:"Snap Inc."},{s:"PINS",n:"Pinterest Inc."},{s:"RBLX",n:"Roblox Corporation"},{s:"U",n:"Unity Software"},
+    {s:"PLTR",n:"Palantir Technologies"},{s:"AI",n:"C3.ai Inc."},{s:"PATH",n:"UiPath Inc."},{s:"SMCI",n:"Super Micro Computer"},
+    {s:"ARM",n:"Arm Holdings"},{s:"DELL",n:"Dell Technologies"},{s:"HPQ",n:"HP Inc."},{s:"MSTR",n:"MicroStrategy"},
+    // US - Finance
+    {s:"JPM",n:"JPMorgan Chase"},{s:"V",n:"Visa Inc."},{s:"MA",n:"Mastercard Inc."},{s:"BAC",n:"Bank of America"},
+    {s:"WFC",n:"Wells Fargo"},{s:"GS",n:"Goldman Sachs"},{s:"MS",n:"Morgan Stanley"},{s:"BLK",n:"BlackRock Inc."},
+    {s:"C",n:"Citigroup Inc."},{s:"AXP",n:"American Express"},{s:"SCHW",n:"Charles Schwab"},
+    // US - Healthcare
+    {s:"UNH",n:"UnitedHealth Group"},{s:"JNJ",n:"Johnson & Johnson"},{s:"LLY",n:"Eli Lilly"},{s:"PFE",n:"Pfizer Inc."},
+    {s:"ABBV",n:"AbbVie Inc."},{s:"MRK",n:"Merck & Co."},{s:"TMO",n:"Thermo Fisher"},{s:"ABT",n:"Abbott Laboratories"},
+    {s:"DHR",n:"Danaher Corporation"},{s:"BMY",n:"Bristol-Myers Squibb"},{s:"AMGN",n:"Amgen Inc."},{s:"GILD",n:"Gilead Sciences"},
+    {s:"ISRG",n:"Intuitive Surgical"},{s:"MRNA",n:"Moderna Inc."},{s:"REGN",n:"Regeneron Pharmaceuticals"},
+    // US - Consumer
+    {s:"WMT",n:"Walmart Inc."},{s:"PG",n:"Procter & Gamble"},{s:"KO",n:"Coca-Cola Company"},{s:"PEP",n:"PepsiCo Inc."},
+    {s:"COST",n:"Costco Wholesale"},{s:"MCD",n:"McDonald's Corp."},{s:"NKE",n:"Nike Inc."},{s:"SBUX",n:"Starbucks Corp."},
+    {s:"DIS",n:"Walt Disney Company"},{s:"HD",n:"Home Depot"},{s:"LOW",n:"Lowe's Companies"},{s:"TGT",n:"Target Corp."},
+    // US - Industrial & Energy
+    {s:"XOM",n:"Exxon Mobil"},{s:"CVX",n:"Chevron Corp."},{s:"COP",n:"ConocoPhillips"},{s:"BA",n:"Boeing Company"},
+    {s:"CAT",n:"Caterpillar Inc."},{s:"GE",n:"GE Aerospace"},{s:"UPS",n:"United Parcel Service"},{s:"RTX",n:"RTX Corporation"},
+    {s:"HON",n:"Honeywell International"},{s:"LMT",n:"Lockheed Martin"},{s:"DE",n:"Deere & Company"},
+    // US - Other
+    {s:"BRK-B",n:"Berkshire Hathaway B"},{s:"T",n:"AT&T Inc."},{s:"VZ",n:"Verizon Communications"},{s:"CMCSA",n:"Comcast Corp."},
+    {s:"NEE",n:"NextEra Energy"},{s:"SPY",n:"SPDR S&P 500 ETF"},{s:"QQQ",n:"Invesco QQQ (Nasdaq 100)"},
+    {s:"IWM",n:"iShares Russell 2000 ETF"},{s:"DIA",n:"SPDR Dow Jones ETF"},{s:"VTI",n:"Vanguard Total Market ETF"},
+    {s:"GLD",n:"SPDR Gold Shares"},{s:"TLT",n:"iShares 20+ Year Treasury"},{s:"USO",n:"United States Oil Fund"},
+    // Asia & TW
+    {s:"2330.TW",n:"台積電 TSMC"},{s:"2317.TW",n:"鴻海精密 Foxconn"},{s:"2454.TW",n:"聯發科 MediaTek"},
+    {s:"2308.TW",n:"台達電子 Delta"},{s:"2382.TW",n:"廣達電腦 Quanta"},{s:"2303.TW",n:"聯電 UMC"},
+    {s:"2881.TW",n:"富邦金控"},{s:"2882.TW",n:"國泰金控"},{s:"2886.TW",n:"兇豐金控"},
+    {s:"2891.TW",n:"中信金控"},{s:"2884.TW",n:"玉山金控"},{s:"1301.TW",n:"台塑"},
+    {s:"2412.TW",n:"中華電信"},{s:"3711.TW",n:"日月光投控"},{s:"2357.TW",n:"華碩 ASUS"},
+    {s:"3008.TW",n:"大立光 Largan"},{s:"2603.TW",n:"長榦海運"},{s:"0050.TW",n:"元大台灣50 ETF"},
+    // HK
+    {s:"0700.HK",n:"騰訊控股 Tencent"},{s:"9988.HK",n:"阿里巴巴 Alibaba"},{s:"9618.HK",n:"京東 JD.com"},
+    {s:"3690.HK",n:"美團 Meituan"},{s:"1810.HK",n:"小米集團 Xiaomi"},{s:"0005.HK",n:"匯豐控股 HSBC"},
+    {s:"2318.HK",n:"中國平安"},{s:"0941.HK",n:"中國移動"},
+    // Japan
+    {s:"7203.T",n:"豐田汽車 Toyota"},{s:"6758.T",n:"索尼 Sony"},{s:"6861.T",n:"基恩士 Keyence"},
+    {s:"9984.T",n:"軟鈀集團 SoftBank"},{s:"8306.T",n:"三菱UFJ金融"},
+    // Korea
+    {s:"005930.KS",n:"三星電子 Samsung"},{s:"000660.KS",n:"SK海力士 SK Hynix"},
+    // Europe
+    {s:"ASML",n:"ASML Holding"},{s:"SAP",n:"SAP SE"},{s:"NVO",n:"Novo Nordisk"},{s:"AZN",n:"AstraZeneca"},
+    {s:"SHEL",n:"Shell plc"},{s:"TTE",n:"TotalEnergies"},{s:"LVMUY",n:"LVMH (路威酩軦)"},
+    // Crypto related
+    {s:"BTC-USD",n:"Bitcoin 比特幣"},{s:"ETH-USD",n:"Ethereum 以太幣"},
+    // Chinese ADRs
+    {s:"BABA",n:"Alibaba 阿里巴巴"},{s:"JD",n:"JD.com 京東"},{s:"PDD",n:"PDD Holdings 拼多多"},
+    {s:"BIDU",n:"Baidu 百度"},{s:"NIO",n:"NIO 蔚來汽車"},{s:"LI",n:"Li Auto 理想汽車"},{s:"XPEV",n:"XPeng 小鵬汽車"},
+].map(t => ({symbol: t.s, name: t.n}));
+
+// ======================== STATE ========================
+let chart = null;
+let candleSeries = null;
+let currentTicker = '';
+let currentCompany = '';
+let currentPrice = 0;
+let currentRange = '1y';
+let priceLines = [];
+
+// ======================== PASSWORD ========================
+function checkPassword() {
+    const input = document.getElementById('pwd-input').value;
+    if (input === PASSWORD) {
+        document.getElementById('password-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('ticker-input').focus();
+    } else {
+        const err = document.getElementById('pwd-error');
+        err.style.display = 'block';
+        document.getElementById('pwd-input').value = '';
+        document.getElementById('pwd-input').focus();
+        setTimeout(() => err.style.display = 'none', 3000);
+    }
+}
+function logout() {
+    document.getElementById('main-app').style.display = 'none';
+    document.getElementById('password-screen').style.display = 'flex';
+    document.getElementById('pwd-input').value = '';
+}
+document.getElementById('pwd-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
+
+// ======================== AUTOCOMPLETE ========================
+let acIndex = -1;
+const tickerInput = document.getElementById('ticker-input');
+const dropdown = document.getElementById('autocomplete-dropdown');
+
+tickerInput.addEventListener('input', function() {
+    const q = this.value.trim().toLowerCase();
+    if (q.length < 1) { dropdown.style.display = 'none'; return; }
+
+    const results = TICKERS.filter(t =>
+        t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)
+    ).sort((a, b) => {
+        // Exact symbol match first
+        const aExact = a.symbol.toLowerCase() === q ? 0 : 1;
+        const bExact = b.symbol.toLowerCase() === q ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        // Starts-with symbol match
+        const aStarts = a.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+        const bStarts = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
+        return aStarts - bStarts;
+    }).slice(0, 10);
+
+    if (results.length === 0) { dropdown.style.display = 'none'; return; }
+
+    dropdown.innerHTML = results.map(t =>
+        `<div class="autocomplete-item" data-symbol="${t.symbol}" data-name="${t.name}">
+            <span class="symbol">${highlightMatch(t.symbol, q)}</span>
+            <span class="name">${highlightMatch(t.name, q)}</span>
+        </div>`
+    ).join('');
+    dropdown.style.display = 'block';
+    acIndex = -1;
+
+    dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('click', () => selectTicker(item.dataset.symbol, item.dataset.name));
+    });
+});
+
+function highlightMatch(text, query) {
+    const idx = text.toLowerCase().indexOf(query);
+    if (idx < 0) return text;
+    return text.substring(0, idx) + '<b style="color:#e0e3eb">' + text.substring(idx, idx + query.length) + '</b>' + text.substring(idx + query.length);
+}
+
+tickerInput.addEventListener('keydown', function(e) {
+    const items = dropdown.querySelectorAll('.autocomplete-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === 'Enter' && acIndex >= 0) { e.preventDefault(); selectTicker(items[acIndex].dataset.symbol, items[acIndex].dataset.name); }
+    else if (e.key === 'Escape') { dropdown.style.display = 'none'; }
+});
+
+function updateAC(items) {
+    items.forEach((item, i) => item.classList.toggle('active', i === acIndex));
+    if (items[acIndex]) items[acIndex].scrollIntoView({ block: 'nearest' });
+}
+
+function selectTicker(symbol, name) {
+    tickerInput.value = symbol;
+    currentCompany = name || '';
+    dropdown.style.display = 'none';
+}
+
+document.addEventListener('click', e => { if (!e.target.closest('.ticker-group')) dropdown.style.display = 'none'; });
+
+// ======================== DATA FETCHING ========================
+const CORS_PROXIES = [
+    url => url, // direct
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+];
+
+async function fetchWithFallback(url) {
+    for (const makeUrl of CORS_PROXIES) {
+        try {
+            const res = await fetch(makeUrl(url), { signal: AbortSignal.timeout(10000) });
+            if (!res.ok) continue;
+            const text = await res.text();
+            const data = JSON.parse(text);
+            if (data.chart && data.chart.result) return data;
+        } catch (e) { continue; }
+    }
+    throw new Error('所有數據源均無法訪問。請檢查網路連線或稍後再試。');
+}
+
+async function fetchStockData(ticker, range) {
+    const intervalMap = { '1mo': '1d', '3mo': '1d', '1y': '1d', '5y': '1wk', 'max': '1mo' };
+    const interval = intervalMap[range] || '1d';
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}&includePrePost=false`;
+    return await fetchWithFallback(url);
+}
+
+function parseYahooData(data) {
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp || [];
+    const quotes = result.indicators.quote[0];
+    const meta = result.meta;
+
+    const chartData = [];
+    for (let i = 0; i < timestamps.length; i++) {
+        if (quotes.close[i] == null) continue;
+        const d = new Date(timestamps[i] * 1000);
+        const dateStr = d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+        chartData.push({
+            time: dateStr,
+            open: quotes.open[i] ?? quotes.close[i],
+            high: quotes.high[i] ?? quotes.close[i],
+            low: quotes.low[i] ?? quotes.close[i],
+            close: quotes.close[i],
+        });
+    }
+
+    return {
+        data: chartData,
+        currentPrice: meta.regularMarketPrice,
+        previousClose: meta.chartPreviousClose || meta.previousClose,
+        currency: meta.currency || 'USD',
+        name: meta.shortName || meta.longName || meta.symbol,
+        symbol: meta.symbol,
+    };
+}
+
+// ======================== CHART ========================
+async function generateChart() {
+    const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
+    if (!ticker) { alert('請輸入股票代碼'); return; }
+
+    currentTicker = ticker;
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '載入中...';
+
+    const chartContainer = document.getElementById('chart-container');
+    chartContainer.style.display = 'block';
+    document.getElementById('loading-overlay').style.display = 'flex';
+
+    try {
+        await loadChartData(ticker, currentRange);
+    } catch (error) {
+        console.error(error);
+        alert('無法獲取股票數據：' + error.message);
+        chartContainer.style.display = 'none';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '生成走勢圖';
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+}
+
+async function loadChartData(ticker, range) {
+    const rawData = await fetchStockData(ticker, range);
+    const parsed = parseYahooData(rawData);
+    currentPrice = parsed.currentPrice;
+
+    // Update header info
+    document.getElementById('chart-ticker').textContent = parsed.symbol;
+    document.getElementById('chart-company').textContent = currentCompany || parsed.name;
+    document.getElementById('chart-current-price').textContent =
+        parsed.currency + ' ' + currentPrice.toFixed(2);
+
+    // Price change
+    const changeEl = document.getElementById('chart-change');
+    if (parsed.previousClose) {
+        const change = currentPrice - parsed.previousClose;
+        const changePct = (change / parsed.previousClose * 100);
+        const sign = change >= 0 ? '+' : '';
+        changeEl.textContent = `${sign}${change.toFixed(2)} (${sign}${changePct.toFixed(2)}%)`;
+        changeEl.className = 'chart-change ' + (change >= 0 ? 'up' : 'down');
+    } else {
+        changeEl.textContent = '';
+    }
+
+    // Create chart
+    const chartArea = document.getElementById('chart-area');
+    if (chart) { chart.remove(); chart = null; }
+
+    chart = LightweightCharts.createChart(chartArea, {
+        width: chartArea.clientWidth,
+        height: chartArea.clientHeight || 560,
+        layout: {
+            background: { type: 'solid', color: '#1e222d' },
+            textColor: '#787b86',
+            fontSize: 12,
+        },
+        grid: {
+            vertLines: { color: 'rgba(42,46,57,0.6)' },
+            horzLines: { color: 'rgba(42,46,57,0.6)' },
+        },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        rightPriceScale: {
+            borderColor: '#2a2e39',
+            scaleMargins: { top: 0.1, bottom: 0.1 },
+        },
+        timeScale: {
+            borderColor: '#2a2e39',
+            timeVisible: false,
+            fixLeftEdge: true,
+            fixRightEdge: true,
+        },
+        handleScale: { axisPressedMouseMove: { time: true, price: true } },
+        handleScroll: { vertTouchDrag: false },
+    });
+
+    candleSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderUpColor: '#26a69a',
+        borderDownColor: '#ef5350',
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+    });
+
+    candleSeries.setData(parsed.data);
+    addPriceLines();
+    chart.timeScale().fitContent();
+
+    // Debounced resize
+    if (window._chartResizeHandler) window.removeEventListener('resize', window._chartResizeHandler);
+    window._chartResizeHandler = () => {
+        if (chart) chart.applyOptions({ width: chartArea.clientWidth });
+    };
+    window.addEventListener('resize', window._chartResizeHandler);
+}
+
+// ======================== PRICE LINES ========================
+const LINE_CONFIGS = [
+    { id: 'strike-price', label: '轉換價 Strike', color: '#42A5F5', style: 'solid' },
+    { id: 'ko-price-1',   label: '敲出價 KO',     color: '#EF5350', style: 'dashed' },
+    { id: 'ki-price',     label: '敲入價 KI',     color: '#66BB6A', style: 'dashed' },
+    { id: 'ko-price-2',   label: '敲出價 KO₂',    color: '#FFA726', style: 'dashed' },
+];
+
+const CUSTOM_COLORS = ['#AB47BC', '#26C6DA', '#8D6E63'];
+const LINE_STYLE_MAP = {
+    solid:  0, // LightweightCharts.LineStyle.Solid
+    dashed: 1, // LightweightCharts.LineStyle.Dashed
+    dotted: 3, // LightweightCharts.LineStyle.Dotted
+};
+
+function addPriceLines() {
+    if (!candleSeries || !currentPrice) return;
+
+    // Clear existing
+    priceLines.forEach(l => { try { candleSeries.removePriceLine(l); } catch(e) {} });
+    priceLines = [];
+
+    const legendContainer = document.getElementById('chart-legend');
+    legendContainer.innerHTML = '';
+
+    // Build all line definitions
+    const allLines = [...LINE_CONFIGS];
+    for (let i = 1; i <= 3; i++) {
+        const name = document.getElementById(`custom-name-${i}`).value.trim();
+        const pct = document.getElementById(`custom-pct-${i}`).value;
+        if (pct !== '' && pct !== undefined) {
+            allLines.push({
+                id: `custom-pct-${i}`,
+                label: name || `自訂 ${i}`,
+                color: CUSTOM_COLORS[i - 1],
+                style: 'dotted',
+            });
+        }
+    }
+
+    allLines.forEach(cfg => {
+        const el = document.getElementById(cfg.id);
+        const pctStr = el ? el.value : '';
+        if (pctStr === '' || pctStr === undefined) return;
+
+        const pctValue = parseFloat(pctStr);
+        if (isNaN(pctValue)) return;
+
+        const priceValue = currentPrice * (pctValue / 100);
+        const titleText = `${cfg.label} ${pctValue}% ＝ ${priceValue.toFixed(2)}`;
+
+        const line = candleSeries.createPriceLine({
+            price: priceValue,
+            color: cfg.color,
+            lineWidth: 2,
+            lineStyle: LINE_STYLE_MAP[cfg.style] ?? 0,
+            axisLabelVisible: true,
+            title: titleText,
+        });
+        priceLines.push(line);
+
+        // Legend
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `<span class="legend-line ${cfg.style}" style="border-top-color:${cfg.color}"></span><span>${titleText}</span>`;
+        legendContainer.appendChild(item);
+    });
+}
+
+// ======================== TIME RANGE ========================
+async function switchRange(range) {
+    currentRange = range;
+    document.querySelectorAll('.time-btn').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.range === range)
+    );
+
+    if (!currentTicker) return;
+
+    document.getElementById('loading-overlay').style.display = 'flex';
+    try {
+        await loadChartData(currentTicker, range);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        document.getElementById('loading-overlay').style.display = 'none';
+    }
+}
+
+// ======================== DOWNLOAD ========================
+function toggleDownloadMenu() {
+    const dd = document.getElementById('download-dropdown');
+    dd.classList.toggle('show');
+}
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+    if (!e.target.closest('.download-group')) {
+        document.getElementById('download-dropdown').classList.remove('show');
+    }
+});
+
+async function downloadChart(mode) {
+    document.getElementById('download-dropdown').classList.remove('show');
+
+    const btn = document.getElementById('download-btn');
+    btn.disabled = true;
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg> 處理中...`;
+
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `${currentTicker}_${currentRange}_${timestamp}`;
+
+    try {
+        if (mode === 'png-chart') {
+            // Use Lightweight Charts built-in screenshot
+            if (!chart) return;
+            const canvas = chart.takeScreenshot();
+            triggerCanvasDownload(canvas, `${filename}_chart.png`);
+        } else {
+            // Full screenshot with html2canvas
+            const container = document.getElementById('chart-container');
+            // Temporarily hide loading overlay
+            const loadingEl = document.getElementById('loading-overlay');
+            const loadingWasVisible = loadingEl.style.display;
+            loadingEl.style.display = 'none';
+
+            const canvas = await html2canvas(container, {
+                backgroundColor: '#1e222d',
+                scale: 2, // High resolution
+                useCORS: true,
+                logging: false,
+                // Ignore the download dropdown itself
+                ignoreElements: el => el.classList.contains('download-dropdown') || el.classList.contains('download-group'),
+            });
+
+            loadingEl.style.display = loadingWasVisible;
+            triggerCanvasDownload(canvas, `${filename}_full.png`);
+        }
+    } catch (err) {
+        console.error('Download error:', err);
+        alert('下載失敗，請重試。' + (err.message || ''));
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+    }
+}
+
+function triggerCanvasDownload(canvas, filename) {
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// ======================== KEYBOARD SHORTCUT ========================
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.target.closest('.ticker-group') && e.target.tagName === 'INPUT') {
+        generateChart();
+    }
+});
+</script>
+</body>
+</html>
