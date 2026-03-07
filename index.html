@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股價走勢圖 — 衍生性產品策略分析</title>
+    <title>è¡å¹èµ°å¢å â è¡çæ§ç¢åç­ç¥åæ</title>
     <script src="https://unpkg.com/lightweight-charts@4.1/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -98,10 +98,25 @@
         }
         .autocomplete-item:last-child { border-bottom: none; }
         .autocomplete-item:hover, .autocomplete-item.active { background: #363a45; }
-        .autocomplete-item .symbol { font-weight: 700; color: #2962ff; font-size: 14px; min-width: 60px; }
+        .autocomplete-item .symbol { font-weight: 700; color: #2962ff; font-size: 14px; min-width: 70px; }
         .autocomplete-item .name {
             color: #787b86; font-size: 12px; margin-left: 12px;
-            text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+            text-overflow: ellipsis; overflow: hidden; white-space: nowrap; flex: 1;
+        }
+        .autocomplete-item .exchange {
+            color: #4c525e; font-size: 11px; margin-left: 8px; white-space: nowrap;
+        }
+        .autocomplete-item .type-tag {
+            font-size: 10px; padding: 1px 6px; border-radius: 3px; margin-left: 6px; white-space: nowrap;
+            background: rgba(41,98,255,0.15); color: #5b8def;
+        }
+        .autocomplete-searching {
+            padding: 14px; text-align: center; color: #787b86; font-size: 13px;
+        }
+        .autocomplete-searching .mini-spinner {
+            display: inline-block; width: 14px; height: 14px; border: 2px solid #363a45;
+            border-top-color: #2962ff; border-radius: 50%; animation: spin 0.6s linear infinite;
+            vertical-align: middle; margin-right: 8px;
         }
 
         /* ===== Buttons ===== */
@@ -207,79 +222,79 @@
 <!-- ===== Password Screen ===== -->
 <div id="password-screen">
     <div class="password-box">
-        <div class="icon">📈</div>
+        <div class="icon">ð</div>
         <h2>Stock Strategy Chart</h2>
-        <p>股價走勢圖與衍生性產品策略分析工具</p>
-        <input type="password" id="pwd-input" placeholder="請輸入密碼" autofocus>
-        <button onclick="checkPassword()">進入系統</button>
-        <div class="password-error" id="pwd-error">密碼錯誤，請重新輸入</div>
+        <p>è¡å¹èµ°å¢åèè¡çæ§ç¢åç­ç¥åæå·¥å·</p>
+        <input type="password" id="pwd-input" placeholder="è«è¼¸å¥å¯ç¢¼" autofocus>
+        <button onclick="checkPassword()">é²å¥ç³»çµ±</button>
+        <div class="password-error" id="pwd-error">å¯ç¢¼é¯èª¤ï¼è«éæ°è¼¸å¥</div>
     </div>
 </div>
 
 <!-- ===== Main App ===== -->
 <div id="main-app">
     <div class="app-header">
-        <h1>📈 股價走勢圖 — 衍生性產品策略分析</h1>
-        <button class="logout-btn" onclick="logout()">登出</button>
+        <h1>ð è¡å¹èµ°å¢å â è¡çæ§ç¢åç­ç¥åæ</h1>
+        <button class="logout-btn" onclick="logout()">ç»åº</button>
     </div>
 
     <div class="form-container">
-        <div class="section-label">基本設定</div>
+        <div class="section-label">åºæ¬è¨­å®</div>
         <div class="form-row">
             <div class="form-group ticker-group">
-                <label>股票代碼 Ticker <span class="required">*</span></label>
-                <input type="text" id="ticker-input" placeholder="輸入代碼或公司名稱，如 AAPL、Apple、台積電" autocomplete="off">
+                <label>è¡ç¥¨ä»£ç¢¼ Ticker <span class="required">*</span></label>
+                <input type="text" id="ticker-input" placeholder="è¼¸å¥ä»£ç¢¼æåç¨±ï¼å¦ AAPLãé»éãGoldãEURãåæ²¹ãShell" autocomplete="off">
                 <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
             </div>
             <div class="form-group">
-                <label>轉換價 Strike Price (%)</label>
+                <label>è½æå¹ Strike Price (%)</label>
                 <input type="number" id="strike-price" min="0" max="200" step="0.1" placeholder="0 - 200">
             </div>
         </div>
 
-        <div class="section-label" style="margin-top:16px">障礙價格 Barrier Prices</div>
+        <div class="section-label" style="margin-top:16px">éç¤å¹æ ¼ Barrier Prices</div>
         <div class="form-row">
             <div class="form-group">
-                <label>敲出價 KO Price (%)</label>
+                <label>æ²åºå¹ KO Price (%)</label>
                 <input type="number" id="ko-price-1" min="0" max="200" step="0.1" placeholder="0 - 200">
             </div>
             <div class="form-group">
-                <label>敲入價 KI Price (%)</label>
+                <label>æ²å¥å¹ KI Price (%)</label>
                 <input type="number" id="ki-price" min="0" max="200" step="0.1" placeholder="0 - 200">
             </div>
             <div class="form-group">
-                <label>敲出價 KO Price 2 (%)</label>
+                <label>æ²åºå¹ KO Price 2 (%)</label>
                 <input type="number" id="ko-price-2" min="0" max="200" step="0.1" placeholder="0 - 200">
             </div>
         </div>
 
-        <div class="section-label" style="margin-top:16px">自訂欄位 Custom Fields</div>
+        <div class="section-label" style="margin-top:16px">èªè¨æ¬ä½ Custom Fields</div>
         <div class="form-row">
             <div class="form-group">
-                <label>自訂欄位 1</label>
+                <label>èªè¨æ¬ä½ 1</label>
                 <div class="custom-field-row">
-                    <input type="text" id="custom-name-1" placeholder="名稱">
+                    <input type="text" id="custom-name-1" placeholder="åç¨±">
                     <input type="number" id="custom-pct-1" min="0" max="200" step="0.1" placeholder="%">
                 </div>
             </div>
             <div class="form-group">
-                <label>自訂欄位 2</label>
+                <label>èªè¨æ¬ä½ 2</label>
                 <div class="custom-field-row">
-                    <input type="text" id="custom-name-2" placeholder="名稱">
+                    <input type="text" id="custom-name-2" placeholder="åç¨±">
                     <input type="number" id="custom-pct-2" min="0" max="200" step="0.1" placeholder="%">
                 </div>
             </div>
             <div class="form-group">
-                <label>自訂欄位 3</label>
+                <label>èªè¨æ¬ä½ 3</label>
                 <div class="custom-field-row">
-                    <input type="text" id="custom-name-3" placeholder="名稱">
+                    <input type="text" id="custom-name-3" placeholder="åç¨±">
                     <input type="number" id="custom-pct-3" min="0" max="200" step="0.1" placeholder="%">
                 </div>
             </div>
         </div>
 
         <div class="btn-row">
-            <button class="btn-submit" id="submit-btn" onclick="generateChart()">生成走勢圖</button>
+            <button class="btn-submit" id="submit-btn" onclick="generateChart()">çæèµ°å¢å</button>
         </div>
     </div>
 
@@ -298,14 +313,14 @@
                     <button class="time-btn" data-range="3mo" onclick="switchRange('3mo')">3M</button>
                     <button class="time-btn active" data-range="1y" onclick="switchRange('1y')">1Y</button>
                     <button class="time-btn" data-range="5y" onclick="switchRange('5y')">5Y</button>
-                    <button class="time-btn" data-range="max" onclick="switchRange('max')">全部</button>
+                    <button class="time-btn" data-range="max" onclick="switchRange('max')">å¨é¨</button>
                 </div>
                 <div class="download-group">
-                    <button class="btn-download" id="download-btn" onclick="toggleDownloadMenu()" title="下載圖表">
+                    <button class="btn-download" id="download-btn" onclick="toggleDownloadMenu()" title="ä¸è¼åè¡¨">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
-                        下載
+                        ä¸è¼
                     </button>
                     <div class="download-dropdown" id="download-dropdown">
                         <div class="download-option" onclick="downloadChart('png-full')">
@@ -313,8 +328,8 @@
                                 <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
                             </svg>
                             <div>
-                                <div>完整截圖 PNG</div>
-                                <div class="desc">含標題、圖例與策略線標示</div>
+                                <div>å®æ´æªå PNG</div>
+                                <div class="desc">å«æ¨é¡ãåä¾èç­ç¥ç·æ¨ç¤º</div>
                             </div>
                         </div>
                         <div class="download-option" onclick="downloadChart('png-chart')">
@@ -322,8 +337,8 @@
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                             </svg>
                             <div>
-                                <div>僅圖表 PNG</div>
-                                <div class="desc">僅 K 線走勢圖部分</div>
+                                <div>ååè¡¨ PNG</div>
+                                <div class="desc">å K ç·èµ°å¢åé¨å</div>
                             </div>
                         </div>
                     </div>
@@ -334,7 +349,7 @@
         <div class="chart-legend" id="chart-legend"></div>
         <div class="loading-overlay" id="loading-overlay">
             <div class="loading-spinner"></div>
-            <div class="loading-text">載入股價數據中...</div>
+            <div class="loading-text">è¼å¥è¡å¹æ¸æä¸­...</div>
         </div>
     </div>
 </div>
@@ -343,70 +358,94 @@
 // ======================== CONFIG ========================
 const PASSWORD = '1234';
 
-// ======================== TICKER DATABASE ========================
-const TICKERS = [
-    // US - Mega Cap Tech
-    {s:"AAPL",n:"Apple Inc."},{s:"MSFT",n:"Microsoft Corporation"},{s:"GOOGL",n:"Alphabet Inc. (Google)"},{s:"GOOG",n:"Alphabet Inc. Class C"},
-    {s:"AMZN",n:"Amazon.com Inc."},{s:"META",n:"Meta Platforms (Facebook)"},{s:"NVDA",n:"NVIDIA Corporation"},{s:"TSLA",n:"Tesla Inc."},
-    {s:"TSM",n:"Taiwan Semiconductor (台積電)"},{s:"AVGO",n:"Broadcom Inc."},{s:"ORCL",n:"Oracle Corporation"},{s:"ADBE",n:"Adobe Inc."},
-    {s:"CRM",n:"Salesforce Inc."},{s:"CSCO",n:"Cisco Systems"},{s:"ACN",n:"Accenture plc"},{s:"INTC",n:"Intel Corporation"},
-    {s:"AMD",n:"Advanced Micro Devices"},{s:"QCOM",n:"Qualcomm Inc."},{s:"TXN",n:"Texas Instruments"},{s:"NFLX",n:"Netflix Inc."},
-    {s:"IBM",n:"IBM Corporation"},{s:"NOW",n:"ServiceNow Inc."},{s:"INTU",n:"Intuit Inc."},{s:"AMAT",n:"Applied Materials"},
-    {s:"MU",n:"Micron Technology"},{s:"LRCX",n:"Lam Research"},{s:"KLAC",n:"KLA Corporation"},{s:"SNPS",n:"Synopsys Inc."},
-    {s:"CDNS",n:"Cadence Design"},{s:"MRVL",n:"Marvell Technology"},{s:"PANW",n:"Palo Alto Networks"},{s:"CRWD",n:"CrowdStrike"},
-    {s:"SNOW",n:"Snowflake Inc."},{s:"DDOG",n:"Datadog Inc."},{s:"ZS",n:"Zscaler Inc."},{s:"NET",n:"Cloudflare Inc."},
-    {s:"SHOP",n:"Shopify Inc."},{s:"SQ",n:"Block Inc. (Square)"},{s:"PYPL",n:"PayPal Holdings"},{s:"COIN",n:"Coinbase Global"},
-    {s:"UBER",n:"Uber Technologies"},{s:"ABNB",n:"Airbnb Inc."},{s:"DASH",n:"DoorDash Inc."},{s:"SPOT",n:"Spotify Technology"},
-    {s:"SNAP",n:"Snap Inc."},{s:"PINS",n:"Pinterest Inc."},{s:"RBLX",n:"Roblox Corporation"},{s:"U",n:"Unity Software"},
-    {s:"PLTR",n:"Palantir Technologies"},{s:"AI",n:"C3.ai Inc."},{s:"PATH",n:"UiPath Inc."},{s:"SMCI",n:"Super Micro Computer"},
-    {s:"ARM",n:"Arm Holdings"},{s:"DELL",n:"Dell Technologies"},{s:"HPQ",n:"HP Inc."},{s:"MSTR",n:"MicroStrategy"},
-    // US - Finance
-    {s:"JPM",n:"JPMorgan Chase"},{s:"V",n:"Visa Inc."},{s:"MA",n:"Mastercard Inc."},{s:"BAC",n:"Bank of America"},
-    {s:"WFC",n:"Wells Fargo"},{s:"GS",n:"Goldman Sachs"},{s:"MS",n:"Morgan Stanley"},{s:"BLK",n:"BlackRock Inc."},
-    {s:"C",n:"Citigroup Inc."},{s:"AXP",n:"American Express"},{s:"SCHW",n:"Charles Schwab"},
-    // US - Healthcare
-    {s:"UNH",n:"UnitedHealth Group"},{s:"JNJ",n:"Johnson & Johnson"},{s:"LLY",n:"Eli Lilly"},{s:"PFE",n:"Pfizer Inc."},
-    {s:"ABBV",n:"AbbVie Inc."},{s:"MRK",n:"Merck & Co."},{s:"TMO",n:"Thermo Fisher"},{s:"ABT",n:"Abbott Laboratories"},
-    {s:"DHR",n:"Danaher Corporation"},{s:"BMY",n:"Bristol-Myers Squibb"},{s:"AMGN",n:"Amgen Inc."},{s:"GILD",n:"Gilead Sciences"},
-    {s:"ISRG",n:"Intuitive Surgical"},{s:"MRNA",n:"Moderna Inc."},{s:"REGN",n:"Regeneron Pharmaceuticals"},
-    // US - Consumer
-    {s:"WMT",n:"Walmart Inc."},{s:"PG",n:"Procter & Gamble"},{s:"KO",n:"Coca-Cola Company"},{s:"PEP",n:"PepsiCo Inc."},
-    {s:"COST",n:"Costco Wholesale"},{s:"MCD",n:"McDonald's Corp."},{s:"NKE",n:"Nike Inc."},{s:"SBUX",n:"Starbucks Corp."},
-    {s:"DIS",n:"Walt Disney Company"},{s:"HD",n:"Home Depot"},{s:"LOW",n:"Lowe's Companies"},{s:"TGT",n:"Target Corp."},
-    // US - Industrial & Energy
-    {s:"XOM",n:"Exxon Mobil"},{s:"CVX",n:"Chevron Corp."},{s:"COP",n:"ConocoPhillips"},{s:"BA",n:"Boeing Company"},
-    {s:"CAT",n:"Caterpillar Inc."},{s:"GE",n:"GE Aerospace"},{s:"UPS",n:"United Parcel Service"},{s:"RTX",n:"RTX Corporation"},
-    {s:"HON",n:"Honeywell International"},{s:"LMT",n:"Lockheed Martin"},{s:"DE",n:"Deere & Company"},
-    // US - Other
-    {s:"BRK-B",n:"Berkshire Hathaway B"},{s:"T",n:"AT&T Inc."},{s:"VZ",n:"Verizon Communications"},{s:"CMCSA",n:"Comcast Corp."},
-    {s:"NEE",n:"NextEra Energy"},{s:"SPY",n:"SPDR S&P 500 ETF"},{s:"QQQ",n:"Invesco QQQ (Nasdaq 100)"},
-    {s:"IWM",n:"iShares Russell 2000 ETF"},{s:"DIA",n:"SPDR Dow Jones ETF"},{s:"VTI",n:"Vanguard Total Market ETF"},
-    {s:"GLD",n:"SPDR Gold Shares"},{s:"TLT",n:"iShares 20+ Year Treasury"},{s:"USO",n:"United States Oil Fund"},
-    // Asia & TW
-    {s:"2330.TW",n:"台積電 TSMC"},{s:"2317.TW",n:"鴻海精密 Foxconn"},{s:"2454.TW",n:"聯發科 MediaTek"},
-    {s:"2308.TW",n:"台達電子 Delta"},{s:"2382.TW",n:"廣達電腦 Quanta"},{s:"2303.TW",n:"聯電 UMC"},
-    {s:"2881.TW",n:"富邦金控"},{s:"2882.TW",n:"國泰金控"},{s:"2886.TW",n:"兇豐金控"},
-    {s:"2891.TW",n:"中信金控"},{s:"2884.TW",n:"玉山金控"},{s:"1301.TW",n:"台塑"},
-    {s:"2412.TW",n:"中華電信"},{s:"3711.TW",n:"日月光投控"},{s:"2357.TW",n:"華碩 ASUS"},
-    {s:"3008.TW",n:"大立光 Largan"},{s:"2603.TW",n:"長榦海運"},{s:"0050.TW",n:"元大台灣50 ETF"},
-    // HK
-    {s:"0700.HK",n:"騰訊控股 Tencent"},{s:"9988.HK",n:"阿里巴巴 Alibaba"},{s:"9618.HK",n:"京東 JD.com"},
-    {s:"3690.HK",n:"美團 Meituan"},{s:"1810.HK",n:"小米集團 Xiaomi"},{s:"0005.HK",n:"匯豐控股 HSBC"},
-    {s:"2318.HK",n:"中國平安"},{s:"0941.HK",n:"中國移動"},
-    // Japan
-    {s:"7203.T",n:"豐田汽車 Toyota"},{s:"6758.T",n:"索尼 Sony"},{s:"6861.T",n:"基恩士 Keyence"},
-    {s:"9984.T",n:"軟鈀集團 SoftBank"},{s:"8306.T",n:"三菱UFJ金融"},
-    // Korea
-    {s:"005930.KS",n:"三星電子 Samsung"},{s:"000660.KS",n:"SK海力士 SK Hynix"},
-    // Europe
-    {s:"ASML",n:"ASML Holding"},{s:"SAP",n:"SAP SE"},{s:"NVO",n:"Novo Nordisk"},{s:"AZN",n:"AstraZeneca"},
-    {s:"SHEL",n:"Shell plc"},{s:"TTE",n:"TotalEnergies"},{s:"LVMUY",n:"LVMH (路威酩軦)"},
-    // Crypto related
-    {s:"BTC-USD",n:"Bitcoin 比特幣"},{s:"ETH-USD",n:"Ethereum 以太幣"},
-    // Chinese ADRs
-    {s:"BABA",n:"Alibaba 阿里巴巴"},{s:"JD",n:"JD.com 京東"},{s:"PDD",n:"PDD Holdings 拼多多"},
-    {s:"BIDU",n:"Baidu 百度"},{s:"NIO",n:"NIO 蔚來汽車"},{s:"LI",n:"Li Auto 理想汽車"},{s:"XPEV",n:"XPeng 小鵬汽車"},
-].map(t => ({symbol: t.s, name: t.n}));
+// ======================== YAHOO FINANCE SEARCH API ========================
+// Dynamic search â queries Yahoo Finance's full database in real-time
+// with a local Chinese/alias mapping for common terms
+
+const SEARCH_PROXIES = [
+    q => `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&lang=en-US&region=US&quotesCount=12&newsCount=0&listsCount=0&enableFuzzyQuery=true&quotesQueryId=tss_match_phrase_query`,
+    q => `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&lang=en-US&region=US&quotesCount=12&newsCount=0&listsCount=0&enableFuzzyQuery=true&quotesQueryId=tss_match_phrase_query`,
+];
+
+const CORS_SEARCH_WRAPPERS = [
+    url => url,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+// Chinese / alias â Yahoo Finance query mapping (common terms users might type)
+const ALIAS_MAP = {
+    // è²´éå±¬/è½æº,åç©æ
+    'é»é': 'Gold', 'xau': 'Gold', 'éå¹': 'Gold', 'gold': 'Gold',
+    'ç½é': 'Silver', 'xag': 'Silver', 'éå¹': 'Silver',
+    'ç½é': 'Platinum', 'é±é': 'Platinum', 'éé': 'Palladium',
+    'åæ²¹': 'Crude Oil', 'ç³æ²¹': 'Crude Oil', 'å¤©ç¶æ°£': 'Natural Gas',
+    'æ±½æ²¹': 'Gasoline RBOB', 'åææ²¹': 'Heating Oil',
+    'é': 'Copper', 'é': 'Aluminum', 'çÞÅ³': 'Corn', 'å°éº¥': 'Wheat',
+    'å¤§è±': 'Soybean', 'åå¡': 'Coffee', 'ç³': 'Sugar', 'æ£è±': 'Cotton',
+    'å¯å¯': 'Cocoa', 'æ¨æ': 'Lumber', 'é°': 'Lithium', 'é¾': 'Uranium',
+    'ç¨å': 'Rare Earth',
+    'æ­å': 'EURUSD', 'è±é': 'GBPUSD', 'æ¥å': 'USDJPY', 'æ¥å': 'USDJPY',
+    'äººæ°å¹£': 'USDCNY', 'å°å¹£': 'USDTWD', 'æ¸¯å¹£': 'USDHKD',
+    'æ¾³å¹£': 'AUDUSD', 'å å¹£': 'USDCAD', 'çé': 'USDCHF',
+    'éå': 'USDKRW', 'æ°å¹£': 'USDSGD', 'ç¾åææ¸': 'DXY Dollar Index',
+    'å°ç©é»èºW: '2330.TW', 'é´»æµ·': '2317.TW', 'è¯ç¼ç§': '2454.TW',
+    'å°éé»': '2308.TW', 'å»£é': '2382.TW', 'è¯©»': '2303.TW',
+    'å¯é¦é': '2881.TW', 'åæ³°é': '2882.TW', 'åè±é': '2886.TW',
+    'ä¸­ä¿¡é': '2891.TW', 'çå±±é': '2884.TW', 'åå¤§é': '2885.TW',
+    'å°å¡': '1301.TW', 'æ¥æå': '3711.TW', 'å¤§ç«å': '3008.TW',
+    'é·æ¦®': '2603.TW', 'ä¸­è¯é»': '2412.TW', 'è¯ç¢©': '2357.TW',
+    'è¯è© ': '3034.TW', 'åå·¨': '2327.TW', 'çæ±': '2379.TW',
+    'ç·¯ç©': '6669.TW', 'ç è¯': '2395.TW', 'æºé¦': '2345.TW',
+    // æ¸¯è¡å¸¸ç¨
+    'é¨¸è¨': '0700.HK', 'é¿éå·´å·´': '9988.HK', 'ç¾å': '3690.HK',
+    'å°ç±³': '1810.HK', 'äº¬æ±': '9618.HK', 'æ¯äºè¿ª': '1211.HK',
+    'å¯è±': '0005.HK', 'æ¸¯äº¤æ': '0388.HK', 'å¿«æ': '1024.HK',
+    'ç¾åº¦': '9888.HK', 'ç¶²æ': '9999.HK', 'å¹³å®': '2318.HK',
+    'å·¥åéè¡': '1398.HK', 'å»ºè¨­éè¡': '0939.HK', 'ä¸­åéè¡': '3988.HK',
+    'æåéè¡': '3968.HK', 'ä¸­åç§»å': '0941.HK', 'æµ·åºæ': '6862.HK',
+    // æ¥è¡å¸¸ç¨
+    'è±ç°': '7203.T', 'ç´¢å°¼': '6758.T', 'ä»»å¤©å ': '7974.T',
+    'è»é': '9984.T', 'ä¸è±': '8058.T', 'æ¬ç°': '7267.T',
+    // å å¯è²¨å¹£
+    'æ¯ç¹å¹£': 'BTC-USD', 'ä»¥å¤ªå¹£': 'ETH-USD', 'ä»¥å¤ªå': 'ETH-USD',
+    'ççå¹£': 'DOGE-USD', 'çæ³¢å¹£': 'XRP-USD',
+    // ææ¸ETF
+    'æ¨­æ®': 'SPY', 'é£æ¯éå': 'QQQ', 'éç': 'DIA', 'æç': 'HSI',
+    'æ¥ç¶': 'Nikkei', 'å¾·å': 'EWG', 'è±å': 'EWU',
+};
+
+// Type label mapping
+const TYPE_LABELS = {
+    'EQUITY': 'è¡ç¥¨', 'ETF': 'ETF', 'MUTUALFUND': 'åºé', 'INDEX': 'ææ¸',
+    'CURRENCY': 'å¤å¯', 'CRYPTOCURRENCY': 'å å¯', 'FUTURES': 'æè²¨',
+    'OPTION': 'é¸ææ¬', 'WARRANT': 'æ¬è­',
+};
+
+async function searchYahooFinance(query) {
+    for (const makeSearchUrl of SEARCH_PROXIES) {
+        const baseUrl = makeSearchUrl(query);
+        for (const wrapUrl of CORS_SEARCH_WRAPPERS) {
+            try {
+                const url = wrapUrl(baseUrl);
+                const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+                if (!res.ok) continue;
+                const data = await res.json();
+                if (data.quotes && data.quotes.length > 0) return data.quotes;
+            } catch (e) { continue; }
+        }
+    }
+    return null; // All failed
+}
+
+function resolveAlias(input) {
+    const lower = input.toLowerCase().trim();
+    for (const [alias, resolved] of Object.entries(ALIAS_MAP)) {
+        if (lower === alias.toLowerCase()) return resolved;
+    }
+    return input;
+}
 
 // ======================== STATE ========================
 let chart = null;
@@ -439,56 +478,96 @@ function logout() {
 }
 document.getElementById('pwd-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
 
-// ======================== AUTOCOMPLETE ========================
+// ======================== AUTOCOMPLETE (AI-powered via Yahoo Finance) ========================
 let acIndex = -1;
+let searchTimer = null;
+let lastSearchQuery = '';
+let searchAbort = null;
 const tickerInput = document.getElementById('ticker-input');
 const dropdown = document.getElementById('autocomplete-dropdown');
 
 tickerInput.addEventListener('input', function() {
-    const q = this.value.trim().toLowerCase();
-    if (q.length < 1) { dropdown.style.display = 'none'; return; }
+    const raw = this.value.trim();
+    if (raw.length < 1) { dropdown.style.display = 'none'; clearTimeout(searchTimer); return; }
 
-    const results = TICKERS.filter(t =>
-        t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)
-    ).sort((a, b) => {
-        // Exact symbol match first
-        const aExact = a.symbol.toLowerCase() === q ? 0 : 1;
-        const bExact = b.symbol.toLowerCase() === q ? 0 : 1;
-        if (aExact !== bExact) return aExact - bExact;
-        // Starts-with symbol match
-        const aStarts = a.symbol.toLowerCase().startsWith(q) ? 0 : 1;
-        const bStarts = b.symbol.toLowerCase().startsWith(q) ? 0 : 1;
-        return aStarts - bStarts;
-    }).slice(0, 10);
+    // Show searching indicator immediately
+    dropdown.innerHTML = '<div class="autocomplete-searching"><span class="mini-spinner"></span>æå°ä¸­...</div>';
+    dropdown.style.display = 'block';
+    acIndex = -1;
 
-    if (results.length === 0) { dropdown.style.display = 'none'; return; }
+    // Debounce: wait 300ms after user stops typing
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => performSearch(raw), 300);
+});
 
-    dropdown.innerHTML = results.map(t =>
-        `<div class="autocomplete-item" data-symbol="${t.symbol}" data-name="${t.name}">
-            <span class="symbol">${highlightMatch(t.symbol, q)}</span>
-            <span class="name">${highlightMatch(t.name, q)}</span>
-        </div>`
-    ).join('');
+async function performSearch(raw) {
+    const resolved = resolveAlias(raw);
+    if (resolved === lastSearchQuery) return;
+    lastSearchQuery = resolved;
+
+    try {
+        const results = await searchYahooFinance(resolved);
+
+        // Check if user has typed something new while we were searching
+        if (resolveAlias(tickerInput.value.trim()) !== resolved) return;
+
+        if (!results || results.length === 0) {
+            dropdown.innerHTML = '<div class="autocomplete-searching" style="color:#ef5350">æ¾ä¸å°ã' +
+                escapeHtml(raw) + 'ãç¸éç´æï¼è«åè©¦å¶ä»ééµå­æç´æ¥è¼¸å¥ä»£ç¢¼å¾æçæ</div>';
+            return;
+        }
+
+        renderResults(results, raw.toLowerCase());
+    } catch (e) {
+        dropdown.innerHTML = '<div class="autocomplete-searching" style="color:#ef5350">æå°å¤±æï¼å¯ç´æ¥è¼¸å¥ä»£ç¢¼å¾æçæ</div>';
+    }
+}
+
+function renderResults(quotes, query) {
+    dropdown.innerHTML = quotes.map(q => {
+        const sym = q.symbol || '';
+        const name = q.shortname || q.longname || '';
+        const exchange = q.exchDisp || q.exchange || '';
+        const type = TYPE_LABELS[q.quoteType] || q.typeDisp || q.quoteType || '';
+
+        return `<div class="autocomplete-item" data-symbol="${escapeAttr(sym)}" data-name="${escapeAttr(name)}">
+            <span class="symbol">${highlightMatch(sym, query)}</span>
+            <span class="name">${highlightMatch(name, query)}</span>
+            <span class="exchange">${escapeHtml(exchange)}</span>
+            ${type ? `<span class="type-tag">${escapeHtml(type)}</span>` : ''}
+        </div>`;
+    }).join('');
+
     dropdown.style.display = 'block';
     acIndex = -1;
 
     dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
         item.addEventListener('click', () => selectTicker(item.dataset.symbol, item.dataset.name));
     });
-});
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeAttr(str) {
+    return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 function highlightMatch(text, query) {
-    const idx = text.toLowerCase().indexOf(query);
-    if (idx < 0) return text;
-    return text.substring(0, idx) + '<b style="color:#e0e3eb">' + text.substring(idx, idx + query.length) + '</b>' + text.substring(idx + query.length);
+    if (!query) return escapeHtml(text);
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(query.toLowerCase());
+    if (idx < 0) return escapeHtml(text);
+    return escapeHtml(text.substring(0, idx)) +
+        '<b style="color:#e0e3eb">' + escapeHtml(text.substring(idx, idx + query.length)) + '</b>' +
+        escapeHtml(text.substring(idx + query.length));
 }
 
 tickerInput.addEventListener('keydown', function(e) {
     const items = dropdown.querySelectorAll('.autocomplete-item');
-    if (!items.length) return;
-    if (e.key === 'ArrowDown') { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
-    else if (e.key === 'Enter' && acIndex >= 0) { e.preventDefault(); selectTicker(items[acIndex].dataset.symbol, items[acIndex].dataset.name); }
+    if (e.key === 'ArrowDown' && items.length) { e.preventDefault(); acIndex = Math.min(acIndex + 1, items.length - 1); updateAC(items); }
+    else if (e.key === 'ArrowUp' && items.length) { e.preventDefault(); acIndex = Math.max(acIndex - 1, 0); updateAC(items); }
+    else if (e.key === 'Enter' && acIndex >= 0 && items.length) { e.preventDefault(); selectTicker(items[acIndex].dataset.symbol, items[acIndex].dataset.name); }
     else if (e.key === 'Escape') { dropdown.style.display = 'none'; }
 });
 
@@ -510,26 +589,37 @@ const CORS_PROXIES = [
     url => url, // direct
     url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
     url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ];
 
 async function fetchWithFallback(url) {
     for (const makeUrl of CORS_PROXIES) {
         try {
-            const res = await fetch(makeUrl(url), { signal: AbortSignal.timeout(10000) });
+            const proxyUrl = makeUrl(url);
+            const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
             if (!res.ok) continue;
             const text = await res.text();
             const data = JSON.parse(text);
             if (data.chart && data.chart.result) return data;
         } catch (e) { continue; }
     }
-    throw new Error('所有數據源均無法訪問。請檢查網路連線或稍後再試。');
+    throw new Error('æææ¸ææºåç¡æ³è¨ªåãè«æª¢æ¥ç¶²è·¯é£ç·æç¨å¾åè©¦ã');
 }
 
 async function fetchStockData(ticker, range) {
     const intervalMap = { '1mo': '1d', '3mo': '1d', '1y': '1d', '5y': '1wk', 'max': '1mo' };
     const interval = intervalMap[range] || '1d';
+
+    // Yahoo Finance v8 API
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}&includePrePost=false`;
-    return await fetchWithFallback(url);
+
+    try {
+        return await fetchWithFallback(url);
+    } catch (e) {
+        // Fallback: try query2 endpoint
+        const url2 = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}&includePrePost=false`;
+        return await fetchWithFallback(url2);
+    }
 }
 
 function parseYahooData(data) {
@@ -567,13 +657,13 @@ function parseYahooData(data) {
 // ======================== CHART ========================
 async function generateChart() {
     const ticker = document.getElementById('ticker-input').value.trim().toUpperCase();
-    if (!ticker) { alert('請輸入股票代碼'); return; }
+    if (!ticker) { alert('è«è¼¸å¥è¡ç¥¨ä»£ç¢¼'); return; }
 
     currentTicker = ticker;
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
-    btn.textContent = '載入中...';
+    btn.textContent = 'è¼å¥ä¸­...';
 
     const chartContainer = document.getElementById('chart-container');
     chartContainer.style.display = 'block';
@@ -583,11 +673,11 @@ async function generateChart() {
         await loadChartData(ticker, currentRange);
     } catch (error) {
         console.error(error);
-        alert('無法獲取股票數據：' + error.message);
+        alert('ç¡æ³ç²åè¡ç¥¨æ¸æï¼' + error.message);
         chartContainer.style.display = 'none';
     } finally {
         btn.disabled = false;
-        btn.textContent = '生成走勢圖';
+        btn.textContent = 'çæèµ°å¢å';
         document.getElementById('loading-overlay').style.display = 'none';
     }
 }
@@ -669,10 +759,10 @@ async function loadChartData(ticker, range) {
 
 // ======================== PRICE LINES ========================
 const LINE_CONFIGS = [
-    { id: 'strike-price', label: '轉換價 Strike', color: '#42A5F5', style: 'solid' },
-    { id: 'ko-price-1',   label: '敲出價 KO',     color: '#EF5350', style: 'dashed' },
-    { id: 'ki-price',     label: '敲入價 KI',     color: '#66BB6A', style: 'dashed' },
-    { id: 'ko-price-2',   label: '敲出價 KO₂',    color: '#FFA726', style: 'dashed' },
+    { id: 'strike-price', label: 'è½æå¹ Strike', color: '#42A5F5', style: 'solid' },
+    { id: 'ko-price-1',   label: 'æ²åºå¹ KO',     color: '#EF5350', style: 'dashed' },
+    { id: 'ki-price',     label: 'æ²å¥å¹ KI',     color: '#66BB6A', style: 'dashed' },
+    { id: 'ko-price-2',   label: 'æ²åºå¹ KOâ',    color: '#FFA726', style: 'dashed' },
 ];
 
 const CUSTOM_COLORS = ['#AB47BC', '#26C6DA', '#8D6E63'];
@@ -700,7 +790,7 @@ function addPriceLines() {
         if (pct !== '' && pct !== undefined) {
             allLines.push({
                 id: `custom-pct-${i}`,
-                label: name || `自訂 ${i}`,
+                label: name || `èªè¨ ${i}`,
                 color: CUSTOM_COLORS[i - 1],
                 style: 'dotted',
             });
@@ -716,7 +806,7 @@ function addPriceLines() {
         if (isNaN(pctValue)) return;
 
         const priceValue = currentPrice * (pctValue / 100);
-        const titleText = `${cfg.label} ${pctValue}% ＝ ${priceValue.toFixed(2)}`;
+        const titleText = `${cfg.label} ${pctValue}% ï¼ ${priceValue.toFixed(2)}`;
 
         const line = candleSeries.createPriceLine({
             price: priceValue,
@@ -773,7 +863,7 @@ async function downloadChart(mode) {
     const btn = document.getElementById('download-btn');
     btn.disabled = true;
     const origHTML = btn.innerHTML;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg> 處理中...`;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.48-8.48l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83"/></svg> èçä¸­...`;
 
     const timestamp = new Date().toISOString().slice(0, 10);
     const filename = `${currentTicker}_${currentRange}_${timestamp}`;
@@ -806,7 +896,7 @@ async function downloadChart(mode) {
         }
     } catch (err) {
         console.error('Download error:', err);
-        alert('下載失敗，請重試。' + (err.message || ''));
+        alert('ä¸è¼å¤±æï¼è«éè©¦ã' + (err.message || ''));
     } finally {
         btn.disabled = false;
         btn.innerHTML = origHTML;
