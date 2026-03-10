@@ -81,9 +81,17 @@
         }
         .form-group input:focus { border-color: #2962ff; }
         .form-group input::placeholder { color: #4c525e; }
-        .custom-field-row { display: flex; gap: 8px; }
+        .custom-field-row { display: flex; gap: 8px; align-items: center; }
         .custom-field-row input:first-child { flex: 2; }
-        .custom-field-row input:last-child { flex: 1; }
+        .custom-field-row input:nth-child(2) { flex: 1; }
+        .custom-toggle {
+            display: flex; align-items: center; gap: 4px; cursor: pointer;
+            white-space: nowrap; user-select: none; font-size: 12px; color: #787b86;
+        }
+        .custom-toggle input[type="checkbox"] {
+            width: 16px; height: 16px; accent-color: #2962ff; cursor: pointer;
+        }
+        .toggle-label { font-size: 11px; color: #787b86; }
 
         /* ===== Autocomplete ===== */
         .autocomplete-dropdown {
@@ -182,7 +190,7 @@
 
         #chart-area { width: 100%; height: 560px; }
 
-        /* ===== Lefend ===== */
+        /* ===== Legend ===== */
         .chart-legend {
             display: flex; flex-wrap: wrap; gap: 16px; padding: 14px 20px; border-top: 1px solid #2a2e39;
         }
@@ -243,7 +251,7 @@
         <div class="form-row">
             <div class="form-group ticker-group">
                 <label>股票代碼 Ticker <span class="required">*</span></label>
-                <input type="text" id="ticker-input" placeholder="輸入代碼或名稱，如 AAPL、黃金、Gold、EUR、原油。Shell" autocomplete="off">
+                <input type="text" id="ticker-input" placeholder="輸入代碼或名稱，如 AAPL、黃金、Gold、EUR、原油、Shell" autocomplete="off">
                 <div class="autocomplete-dropdown" id="autocomplete-dropdown"></div>
             </div>
             <div class="form-group">
@@ -262,9 +270,21 @@
                 <label>敲入價 KI Price (%)</label>
                 <input type="number" id="ki-price" min="0" max="200" step="0.1" placeholder="0 - 200">
             </div>
+        </div>
+
+        <div class="section-label" style="margin-top:16px">價格水平 Price Levels（絕對數值）</div>
+        <div class="form-row">
             <div class="form-group">
-                <label>Pivot Price (%)</label>
-                <input type="number" id="pivot-price" min="0" max="200" step="0.1" placeholder="0 - 200">
+                <label>樞軸價 Pivot</label>
+                <input type="number" id="pivot-price" min="0" step="0.01" placeholder="絕對價格">
+            </div>
+            <div class="form-group">
+                <label>上限價 Upper Barrier</label>
+                <input type="number" id="upper-barrier" min="0" step="0.01" placeholder="絕對價格">
+            </div>
+            <div class="form-group">
+                <label>下限價 Lower Barrier</label>
+                <input type="number" id="lower-barrier" min="0" step="0.01" placeholder="絕對價格">
             </div>
         </div>
 
@@ -274,21 +294,34 @@
                 <label>自訂欄位 1</label>
                 <div class="custom-field-row">
                     <input type="text" id="custom-name-1" placeholder="名稱">
-                    <input type="number" id="custom-pct-1" min="0" max="200" step="0.1" placeholder="%">
+                    <input type="number" id="custom-val-1" step="0.01" placeholder="數值">
+                    <label class="custom-toggle"><input type="checkbox" id="custom-mode-1"><span class="toggle-label">%</span></label>
                 </div>
             </div>
             <div class="form-group">
                 <label>自訂欄位 2</label>
                 <div class="custom-field-row">
                     <input type="text" id="custom-name-2" placeholder="名稱">
-                    <input type="number" id="custom-pct-2" min="0" max="200" step="0.1" placeholder="%">
+                    <input type="number" id="custom-val-2" step="0.01" placeholder="數值">
+                    <label class="custom-toggle"><input type="checkbox" id="custom-mode-2"><span class="toggle-label">%</span></label>
                 </div>
             </div>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>自訂欄位 3</label>
                 <div class="custom-field-row">
                     <input type="text" id="custom-name-3" placeholder="名稱">
-                    <input type="number" id="custom-pct-3" min="0" max="200" step="0.1" placeholder="%">
+                    <input type="number" id="custom-val-3" step="0.01" placeholder="數值">
+                    <label class="custom-toggle"><input type="checkbox" id="custom-mode-3"><span class="toggle-label">%</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>自訂欄位 4</label>
+                <div class="custom-field-row">
+                    <input type="text" id="custom-name-4" placeholder="名稱">
+                    <input type="number" id="custom-val-4" step="0.01" placeholder="數值">
+                    <label class="custom-toggle"><input type="checkbox" id="custom-mode-4"><span class="toggle-label">%</span></label>
                 </div>
             </div>
         </div>
@@ -378,7 +411,7 @@ const CORS_SEARCH_WRAPPERS = [
 const ALIAS_MAP = {
     // 貴金屬
     '黃金': 'Gold', 'xau': 'Gold', '金價': 'Gold', 'gold': 'Gold',
-    '白銀': 'Silver', 'xag': 'Silver', '鉠價': 'Silver',
+    '白銀': 'Silver', 'xag': 'Silver', '銀價': 'Silver',
     '白金': 'Platinum', '鉑金': 'Platinum', '鈀金': 'Palladium',
     // 能源
     '原油': 'Crude Oil', '石油': 'Crude Oil', '天然氣': 'Natural Gas',
@@ -386,7 +419,7 @@ const ALIAS_MAP = {
     // 原物料
     '銅': 'Copper', '鋁': 'Aluminum', '玉米': 'Corn', '小麥': 'Wheat',
     '大豆': 'Soybean', '咖啡': 'Coffee', '糖': 'Sugar', '棉花': 'Cotton',
-    '可可': 'Cocoa', '木材': 'Lumber', '釰': 'Lithium', '鈾': 'Uranium',
+    '可可': 'Cocoa', '木材': 'Lumber', '鋰': 'Lithium', '鈾': 'Uranium',
     '稀土': 'Rare Earth',
     // 外匯
     '歐元': 'EURUSD', '英鎊': 'GBPUSD', '日圓': 'USDJPY', '日元': 'USDJPY',
@@ -406,7 +439,7 @@ const ALIAS_MAP = {
     '騰訊': '0700.HK', '阿里巴巴': '9988.HK', '美團': '3690.HK',
     '小米': '1810.HK', '京東': '9618.HK', '比亞迪': '1211.HK',
     '匯豐': '0005.HK', '港交所': '0388.HK', '快手': '1024.HK',
-    '百度': '9888.HK', '��易': '9999.HK', '平安': '2318.HK',
+    '百度': '9888.HK', '網易': '9999.HK', '平安': '2318.HK',
     '工商銀行': '1398.HK', '建設銀行': '0939.HK', '中國銀行': '3988.HK',
     '招商銀行': '3968.HK', '中國移動': '0941.HK', '海底撈': '6862.HK',
     // 日股常用
@@ -762,14 +795,21 @@ async function loadChartData(ticker, range) {
 }
 
 // ======================== PRICE LINES ========================
-const LINE_CONFIGS = [
+// Percentage-based lines (price = currentPrice * value / 100)
+const PCT_LINE_CONFIGS = [
     { id: 'strike-price', label: '轉換價 Strike', color: '#42A5F5', style: 'solid' },
     { id: 'ko-price-1',   label: '敲出價 KO',     color: '#EF5350', style: 'dashed' },
     { id: 'ki-price',     label: '敲入價 KI',     color: '#66BB6A', style: 'dashed' },
-    { id: 'ko-price-2',   label: '敲出價 KO₂',    color: '#FFA726', style: 'dashed' },
 ];
 
-const CUSTOM_COLORS = ['#AB47BC', '#26C6DA', '#8D6E63'];
+// Absolute value lines (price = direct input value)
+const ABS_LINE_CONFIGS = [
+    { id: 'pivot-price',   label: '樞軸價 Pivot',         color: '#FFA726', style: 'solid' },
+    { id: 'upper-barrier', label: '上限價 Upper Barrier',  color: '#FF7043', style: 'dashed' },
+    { id: 'lower-barrier', label: '下限價 Lower Barrier',  color: '#78909C', style: 'dashed' },
+];
+
+const CUSTOM_COLORS = ['#AB47BC', '#26C6DA', '#8D6E63', '#FFCA28'];
 const LINE_STYLE_MAP = {
     solid:  0, // LightweightCharts.LineStyle.Solid
     dashed: 1, // LightweightCharts.LineStyle.Dashed
@@ -786,48 +826,70 @@ function addPriceLines() {
     const legendContainer = document.getElementById('chart-legend');
     legendContainer.innerHTML = '';
 
-    // Build all line definitions
-    const allLines = [...LINE_CONFIGS];
-    for (let i = 1; i <= 3; i++) {
-        const name = document.getElementById(`custom-name-${i}`).value.trim();
-        const pct = document.getElementById(`custom-pct-${i}`).value;
-        if (pct !== '' && pct !== undefined) {
-            allLines.push({
-                id: `custom-pct-${i}`,
-                label: name || `自訂 ${i}`,
-                color: CUSTOM_COLORS[i - 1],
-                style: 'dotted',
-            });
-        }
-    }
-
-    allLines.forEach(cfg => {
-        const el = document.getElementById(cfg.id);
-        const pctStr = el ? el.value : '';
-        if (pctStr === '' || pctStr === undefined) return;
-
-        const pctValue = parseFloat(pctStr);
-        if (isNaN(pctValue)) return;
-
-        const priceValue = currentPrice * (pctValue / 100);
-        const titleText = `${cfg.label} ${pctValue}% ＝ ${priceValue.toFixed(2)}`;
-
+    // Helper to draw a line and add legend
+    function drawLine(priceValue, titleText, color, style) {
         const line = candleSeries.createPriceLine({
             price: priceValue,
-            color: cfg.color,
+            color: color,
             lineWidth: 2,
-            lineStyle: LINE_STYLE_MAP[cfg.style] ?? 0,
+            lineStyle: LINE_STYLE_MAP[style] ?? 0,
             axisLabelVisible: true,
             title: titleText,
         });
         priceLines.push(line);
 
-        // Legend
         const item = document.createElement('div');
         item.className = 'legend-item';
-        item.innerHTML = `<span class="legend-line ${cfg.style}" style="border-top-color:${cfg.color}"></span><span>${titleText}</span>`;
+        item.innerHTML = `<span class="legend-line ${style}" style="border-top-color:${color}"></span><span>${titleText}</span>`;
         legendContainer.appendChild(item);
+    }
+
+    // 1) Percentage-based lines (Strike, KO, KI)
+    PCT_LINE_CONFIGS.forEach(cfg => {
+        const el = document.getElementById(cfg.id);
+        const valStr = el ? el.value : '';
+        if (valStr === '' || valStr === undefined) return;
+        const pctValue = parseFloat(valStr);
+        if (isNaN(pctValue)) return;
+        const priceValue = currentPrice * (pctValue / 100);
+        const titleText = `${cfg.label} ${pctValue}% ＝ ${priceValue.toFixed(2)}`;
+        drawLine(priceValue, titleText, cfg.color, cfg.style);
     });
+
+    // 2) Absolute value lines (Pivot, Upper Barrier, Lower Barrier)
+    ABS_LINE_CONFIGS.forEach(cfg => {
+        const el = document.getElementById(cfg.id);
+        const valStr = el ? el.value : '';
+        if (valStr === '' || valStr === undefined) return;
+        const absValue = parseFloat(valStr);
+        if (isNaN(absValue)) return;
+        const titleText = `${cfg.label} ＝ ${absValue.toFixed(2)}`;
+        drawLine(absValue, titleText, cfg.color, cfg.style);
+    });
+
+    // 3) Custom fields (4 groups, each with abs/pct toggle)
+    for (let i = 1; i <= 4; i++) {
+        const name = document.getElementById(`custom-name-${i}`).value.trim();
+        const valStr = document.getElementById(`custom-val-${i}`).value;
+        if (valStr === '' || valStr === undefined) continue;
+        const numValue = parseFloat(valStr);
+        if (isNaN(numValue)) continue;
+
+        const isPct = document.getElementById(`custom-mode-${i}`).checked;
+        const color = CUSTOM_COLORS[i - 1];
+        const label = name || `自訂 ${i}`;
+
+        if (isPct) {
+            // Percentage mode: currentPrice * value / 100
+            const priceValue = currentPrice * (numValue / 100);
+            const titleText = `${label} ${numValue}% ＝ ${priceValue.toFixed(2)}`;
+            drawLine(priceValue, titleText, color, 'dotted');
+        } else {
+            // Absolute mode: direct value
+            const titleText = `${label} ＝ ${numValue.toFixed(2)}`;
+            drawLine(numValue, titleText, color, 'dotted');
+        }
+    }
 }
 
 // ======================== TIME RANGE ========================
@@ -914,6 +976,15 @@ function triggerCanvasDownload(canvas, filename) {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+// ======================== CUSTOM FIELD TOGGLE ========================
+for (let i = 1; i <= 4; i++) {
+    const cb = document.getElementById(`custom-mode-${i}`);
+    const valInput = document.getElementById(`custom-val-${i}`);
+    cb.addEventListener('change', function() {
+        valInput.placeholder = this.checked ? '%' : '數值';
+    });
 }
 
 // ======================== KEYBOARD SHORTCUT ========================
